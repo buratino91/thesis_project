@@ -77,20 +77,21 @@ def _normalized_to_pixel_coordinates(
   return x_px, y_px
 
 
+if __name__ == "__main__":
 # Create a face detector object
-base_options = python.BaseOptions(model_asset_path=model_path)
-options = vision.FaceDetectorOptions(base_options=base_options)
-detector = vision.FaceDetector.create_from_options(options)
+  base_options = python.BaseOptions(model_asset_path=model_path)
+  options = vision.FaceDetectorOptions(base_options=base_options)
+  detector = vision.FaceDetector.create_from_options(options)
 
-# Load the input image
-image = mp.Image.create_from_file(IMAGE_FILE)
+  # Load the input image
+  image = mp.Image.create_from_file(IMAGE_FILE)
 
-# Detect the faces
-detection_result = detector.detect(image)
+  # Detect the faces
+  detection_result = detector.detect(image)
 
-# Step 5: view the result
-image_copy = np.copy(image.numpy_view())
-annotated_image = visualize(image_copy, detection_result)
-rgb_annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
-cv2.imshow("win", rgb_annotated_image)
-cv2.waitKey(0)
+  # Step 5: view the result
+  image_copy = np.copy(image.numpy_view())
+  annotated_image = visualize(image_copy, detection_result)
+  rgb_annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
+  cv2.imshow("win", rgb_annotated_image)
+  cv2.waitKey(0)

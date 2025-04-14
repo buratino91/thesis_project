@@ -9,11 +9,7 @@ import cv2
 
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
-expressions = {
-  'happy': ['mouthSmileRight', 'mouthSmileLeft'],
-  'surprised': ['browInnerUp', 'jawOpen'],
-  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight']
-}
+
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   face_landmarks_list = detection_result.face_landmarks
@@ -74,25 +70,37 @@ def plot_face_blendshapes_bar_graph(face_blendshapes):
   plt.tight_layout()
   plt.show()
 
-def get_expressions(face_blendshapes):
-  if face_blendshapes[44].score + face_blendshapes[45].score > 0.6:
-    return 'happy'
-  elif face_blendshapes[34].score + face_blendshapes[35].score > 0.6:
-    return 'sad'
-  elif face_blendshapes[3].score + face_blendshapes[25].score > 0.6:
-    return 'surprised'
-  else:
-    return 'Expression not detected'
+# def get_expressions(face_blendshapes):
+#   if face_blendshapes[44].score + face_blendshapes[45].score > 0.6:
+#     return 'happy'
+#   elif face_blendshapes[34].score + face_blendshapes[35].score > 0.6:
+#     return 'sad'
+#   elif face_blendshapes[3].score + face_blendshapes[25].score > 0.6:
+#     return 'surprised'
+#   else:
+#     return 'Expression not detected'
   
 def get_top_expressions(result):
+  ''' Retrieves the most dominant expressions from 
+  the result and returns the emotion based on
+  the expressions dict mapping
+  '''
+  expressions = {
+  'happy': ['mouthSmileRight', 'mouthSmileLeft'],
+  'surprised': ['browInnerUp', 'jawOpen'],
+  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight']
+  }
   if result:
     blendshapes = result.face_blendshapes[0]
-    top_expression = max(blendshapes, key=lambda x:x.score)
-    print(f"Dominant expression: {top_expression.category_name} ({top_expression.score:.2f})")
-    return top_expression.category_name
-
-
+    top_landmark = max(blendshapes, key=lambda x:x.score)
+    if top_landmark.score > 0.5:
+      #print(f"Dominant landmark: {top_landmark.category_name} ({top_landmark.score:.2f})")
+      for expression, landmarks in expressions.items():
+        for landmark in landmarks:
+          if landmark in top_landmark.category_name:
+            return expression.title()
     
+
 
 BaseOptions = mp.tasks.BaseOptions
 FaceLandmarker = mp.tasks.vision.FaceLandmarker
@@ -106,29 +114,26 @@ options = FaceLandmarkerOptions(
     output_facial_transformation_matrixes=True,
     num_faces=5)
 
-with FaceLandmarker.create_from_options(options) as landmarker:
-  # The landmarker is initialized. Use it here.
+if __name__ == "__main__":
+  with FaceLandmarker.create_from_options(options) as landmarker:
+    # The landmarker is initialized. Use it here.
+    
+    mp_image = mp.Image.create_from_file('/Users/glenchua/Pictures/DE3BB0B6-6BDC-4CF4-B91C-A3BAF48F7DC9_1_105_c.jpeg')
+    bgr_image = cv2.cvtColor(mp_image.numpy_view(), cv2.COLOR_RGB2BGR) # numpy array in opencv format
+    
+
+    # Run the result
+    face_landmarker_result = landmarker.detect(mp_image)
+    
+
+    annotated_image = draw_landmarks_on_image(bgr_image, face_landmarker_result)
+    cv2.imshow("window", annotated_image)
+
+  plot_face_blendshapes_bar_graph(face_landmarker_result.face_blendshapes[0])
+  top_expression = get_top_expressions(face_landmarker_result)
+  print(top_expression)
+
+
   
-  mp_image = mp.Image.create_from_file('/Users/glenchua/Pictures/DE3BB0B6-6BDC-4CF4-B91C-A3BAF48F7DC9_1_105_c.jpeg')
-  bgr_image = cv2.cvtColor(mp_image.numpy_view(), cv2.COLOR_RGB2BGR) # numpy array in opencv format
-  
 
-  # Run the result
-  face_landmarker_result = landmarker.detect(mp_image)
-  
-
-  annotated_image = draw_landmarks_on_image(bgr_image, face_landmarker_result)
-  cv2.imshow("window", annotated_image)
-
-plot_face_blendshapes_bar_graph(face_landmarker_result.face_blendshapes[0])
-dominant_expression = get_top_expressions(face_landmarker_result)
-
-for expression, landmarks in expressions.items():
-  for landmark in landmarks:
-    if landmark in dominant_expression:
-      print(f"Expression detected: {expression.title()}")
-# scores = face_landmarker_result.face_blendshapes[0]
-
-# expressions = get_expressions(scores)
-# print(f"Expressions detected: {expressions}")
 

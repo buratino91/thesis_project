@@ -35,34 +35,37 @@ options = FaceDetectorOptions(
     running_mode=VisionRunningMode.LIVE_STREAM,
     result_callback=on_face_detected)
 
-with FaceDetector.create_from_options(options) as detector:
-    start_time = time.time()
-    cap = cv.VideoCapture(0)
 
-    if not cap.isOpened():
-        print("Cannot open camera")
-        exit()
-    while True:
-    # Capture frame-by-frame
-        ret, frame = cap.read()
-        color = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=color) # Convert the frame received from OpenCV to a MediaPipe’s Image object.
-        frame_timestamp_ms = int((time.time() - start_time) * 1000)
 
-        # Detect faces
-        detector.detect_async(mp_image, frame_timestamp_ms)
+if __name__ == "__main__":
+    with FaceDetector.create_from_options(options) as detector:
+        start_time = time.time()
+        cap = cv.VideoCapture(0)
 
-        # Display the frame
-        if latest_frame is not None:
-            cv.imshow("window", cv.cvtColor(latest_frame, cv.COLOR_RGB2BGR))
+        if not cap.isOpened():
+            print("Cannot open camera")
+            exit()
+        while True:
+        # Capture frame-by-frame
+            ret, frame = cap.read()
+            color = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=color) # Convert the frame received from OpenCV to a MediaPipe’s Image object.
+            frame_timestamp_ms = int((time.time() - start_time) * 1000)
 
- 
-    # if frame is read correctly ret is True
-        if not ret:
-            print("Can't receive frame (stream end?). Exiting ...")
-            break
+            # Detect faces
+            detector.detect_async(mp_image, frame_timestamp_ms)
 
-        if cv.waitKey(1) == ord('q'):
-            break
-    cap.release()
-    cv.destroyAllWindows()
+            # Display the frame
+            if latest_frame is not None:
+                cv.imshow("window", cv.cvtColor(latest_frame, cv.COLOR_RGB2BGR))
+
+    
+        # if frame is read correctly ret is True
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+
+            if cv.waitKey(1) == ord('q'):
+                break
+        cap.release()
+        cv.destroyAllWindows()
