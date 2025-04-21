@@ -6,7 +6,7 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import cv2
-
+import face_recognition
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
 
@@ -70,20 +70,14 @@ def plot_face_blendshapes_bar_graph(face_blendshapes):
   plt.tight_layout()
   plt.show()
 
-# def get_expressions(face_blendshapes):
-#   if face_blendshapes[44].score + face_blendshapes[45].score > 0.6:
-#     return 'happy'
-#   elif face_blendshapes[34].score + face_blendshapes[35].score > 0.6:
-#     return 'sad'
-#   elif face_blendshapes[3].score + face_blendshapes[25].score > 0.6:
-#     return 'surprised'
-#   else:
-#     return 'Expression not detected'
   
 def get_top_expressions(result):
   ''' Retrieves the most dominant expressions from 
   the result and returns the emotion based on
   the expressions dict mapping
+
+  :param result: result from face detection
+  :return str -> expression
   '''
   expressions = {
   'happy': ['mouthSmileRight', 'mouthSmileLeft'],
@@ -99,6 +93,8 @@ def get_top_expressions(result):
         for landmark in landmarks:
           if landmark in top_landmark.category_name:
             return expression.title()
+    else:
+      return "Neutral"
     
 
 
