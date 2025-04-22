@@ -1,8 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 import cv2
 import time
 from facelandmarker import get_top_expressions
@@ -22,8 +19,16 @@ mp_style = mp.solutions.drawing_styles
 mp_face_mesh = mp.solutions.face_mesh
 
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
+
 images = ["ben.jpeg", "shafah.jpeg", "mark.jpeg", "glen.jpeg", "ian.jpeg"]
 known_face_encodings = []
+known_face_names = [
+        "Ben",
+        "Shafah",
+        "Mark",
+        "Glen",
+        "Ian"
+]
 
 def learn_to_recognize(images):
   '''Function to learn to recognize images and append to know_face_encodings
@@ -125,13 +130,7 @@ if __name__ =='__main__':
     
     # Load images and recognize them 
     learn_to_recognize(images)
-    known_face_names = [
-        "Ben",
-        "Shafah",
-        "Mark",
-        "Glen",
-        "Ian"
-    ]
+  
    
 
     # Create facelandmarker from options

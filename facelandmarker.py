@@ -4,14 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mediapipe as mp
 from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
 import cv2
 import face_recognition
 
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
 # Change input picture here
-IMAGE_PATH = 'crying-sad-face-black-woman-depression-thinking-psychological-trauma-home-living-room-tears-unhappy-african-person-345228236.jpeg'
+IMAGE_PATH = '4Head.jpg'
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   face_landmarks_list = detection_result.face_landmarks
@@ -82,17 +81,24 @@ def get_top_expressions(result):
   :return str -> expression
   '''
   expressions = {
-  'happy': ['mouthSmileRight', 'mouthSmileLeft', 'mouthUpperUpRight', 'mouthUpperUpLeft', 'eyeSquintLeft', 'eyeSquintRight'],
-  'surprised': ['browInnerUp', 'jawOpen', 'browOuterUpRight', 'browOuterUpLeft'],
-  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight'],
-  'angry': ['browDownLeft', 'browDownRight', 'noseSneer'],
-  'disgust': ['noseSneerLeft', 'noseSneerRight', 'upperLipRaiseLeft', 'upperLipRaiseRight', 'cheekSquintLeft', 'cheekSquintRight']
+  'happy': ['mouthSmileRight', 'mouthSmileLeft', 'mouthUpperUpRight',
+            'mouthUpperUpLeft', 'eyeSquintLeft', 'eyeSquintRight'],
+  'surprised': ['browInnerUp', 'jawOpen', 'browOuterUpRight',
+                'browOuterUpLeft', 'eyeWideLeft','eyeWideRight',
+                'mouthStretchLeft', 'mouthStretchRight'],
+  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight', 'mouthFrownRight', 
+          'mouthFrownLeft', 'browDownRight', 'browDownLeft',
+          'eyeLookDownLeft', 'eyeLookDownRight'],
+  'angry': ['browDownLeft', 'browDownRight', 'noseSneerRight', 
+            'noseSneerLeft', 'mouthPressLeft', 'mouthPressRight', 
+            'jawForward', 'eyeSquintLeft','eyeSquintRight'],
+  'disgust': ['noseSneerLeft', 'noseSneerRight', 'upperLipRaiseLeft', 
+            'upperLipRaiseRight', 'cheekSquintLeft', 'cheekSquintRight']
   }
   if result:
     blendshapes = result.face_blendshapes[0]
     top_landmark = max(blendshapes, key=lambda x:x.score)
     if top_landmark.score > 0.5:
-      #print(f"Dominant landmark: {top_landmark.category_name} ({top_landmark.score:.2f})")
       for expression, landmarks in expressions.items():
         for landmark in landmarks:
           if landmark in top_landmark.category_name:
