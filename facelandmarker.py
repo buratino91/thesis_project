@@ -7,9 +7,11 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import cv2
 import face_recognition
+
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
-
+# Change input picture here
+IMAGE_PATH = 'crying-sad-face-black-woman-depression-thinking-psychological-trauma-home-living-room-tears-unhappy-african-person-345228236.jpeg'
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   face_landmarks_list = detection_result.face_landmarks
@@ -80,9 +82,11 @@ def get_top_expressions(result):
   :return str -> expression
   '''
   expressions = {
-  'happy': ['mouthSmileRight', 'mouthSmileLeft'],
-  'surprised': ['browInnerUp', 'jawOpen'],
-  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight']
+  'happy': ['mouthSmileRight', 'mouthSmileLeft', 'mouthUpperUpRight', 'mouthUpperUpLeft', 'eyeSquintLeft', 'eyeSquintRight'],
+  'surprised': ['browInnerUp', 'jawOpen', 'browOuterUpRight', 'browOuterUpLeft'],
+  'sad': ['mouthLowerDownLeft', 'mouthLowerDownRight'],
+  'angry': ['browDownLeft', 'browDownRight', 'noseSneer'],
+  'disgust': ['noseSneerLeft', 'noseSneerRight', 'upperLipRaiseLeft', 'upperLipRaiseRight', 'cheekSquintLeft', 'cheekSquintRight']
   }
   if result:
     blendshapes = result.face_blendshapes[0]
@@ -114,20 +118,20 @@ if __name__ == "__main__":
   with FaceLandmarker.create_from_options(options) as landmarker:
     # The landmarker is initialized. Use it here.
     
-    mp_image = mp.Image.create_from_file('/Users/glenchua/Pictures/DE3BB0B6-6BDC-4CF4-B91C-A3BAF48F7DC9_1_105_c.jpeg')
+    mp_image = mp.Image.create_from_file(IMAGE_PATH)
     bgr_image = cv2.cvtColor(mp_image.numpy_view(), cv2.COLOR_RGB2BGR) # numpy array in opencv format
     
 
     # Run the result
     face_landmarker_result = landmarker.detect(mp_image)
-    
+    top_expression = get_top_expressions(face_landmarker_result)
+    print(top_expression)
 
     annotated_image = draw_landmarks_on_image(bgr_image, face_landmarker_result)
     cv2.imshow("window", annotated_image)
 
   plot_face_blendshapes_bar_graph(face_landmarker_result.face_blendshapes[0])
-  top_expression = get_top_expressions(face_landmarker_result)
-  print(top_expression)
+ 
 
 
   

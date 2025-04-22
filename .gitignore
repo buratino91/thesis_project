@@ -3,3 +3,4 @@ thesis_venv/
 *.tflite
 *.task
 dlib/
+*.jpeg
