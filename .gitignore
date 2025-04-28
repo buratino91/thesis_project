@@ -4,3 +4,6 @@ thesis_venv/
 *.task
 dlib/
 *.jpeg
+compound/
+basic/
+*.zip

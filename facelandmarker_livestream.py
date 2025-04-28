@@ -20,26 +20,30 @@ mp_face_mesh = mp.solutions.face_mesh
 
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
-images = ["ben.jpeg", "shafah.jpeg", "mark.jpeg", "glen.jpeg", "ian.jpeg"]
+images = ["ben.jpeg", "shafah.jpeg", "mark.jpeg", "glen.jpeg", "ian.jpeg", "eugene.jpeg", "lyn.jpeg"]
 known_face_encodings = []
 known_face_names = [
         "Ben",
         "Shafah",
         "Mark",
         "Glen",
-        "Ian"
+        "Ian",
+        "Eugene",
+        "Lyn"
 ]
 
-def learn_to_recognize(images):
+def learn_to_recognize(image):
   '''Function to learn to recognize images and append to know_face_encodings
 
-    :param images: list -> path of images to be loaded
-    :return: face_encodings 
+    :param image: str-> path of image to be loaded
+    return: known face encodings: -> ND array
   '''
-  for image in images:
-    loaded_image = face_recognition.load_image_file(image)
-    loaded_image_encoding = face_recognition.face_encodings(loaded_image)[0]
-    known_face_encodings.append(loaded_image_encoding)
+  loaded_image = face_recognition.load_image_file(image)
+  loaded_image_encoding = face_recognition.face_encodings(loaded_image)[0]
+  return loaded_image_encoding
+    
+
+    
 
 
 
@@ -129,8 +133,9 @@ if __name__ =='__main__':
         output_facial_transformation_matrixes=True)
     
     # Load images and recognize them 
-    learn_to_recognize(images)
-  
+    for image in images:
+        recognized_image = learn_to_recognize(image)
+        known_face_encodings.append(recognized_image)
    
 
     # Create facelandmarker from options
@@ -157,10 +162,10 @@ if __name__ =='__main__':
                 rgb_small_frame = cv2.cvtColor(rgb_small_frame , cv2.COLOR_BGR2RGB)
 
                 # Find all the faces and face encodings in the current frame of video
-                face_locations = face_recognition.face_locations(rgb_small_frame)
+                face_locations = face_recognition.face_locations(rgb_small_frame, model='cnn')
                 face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-                for face_encoding in face_encodings:
-                    matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+                    matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.54)
                     name = "Unknown"
                 
                     # Compare distances between known face and new face

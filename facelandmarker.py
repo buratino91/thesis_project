@@ -98,7 +98,7 @@ def get_top_expressions(result):
   if result:
     blendshapes = result.face_blendshapes[0]
     top_landmark = max(blendshapes, key=lambda x:x.score)
-    if top_landmark.score > 0.5:
+    if top_landmark.score > 0.6:
       for expression, landmarks in expressions.items():
         for landmark in landmarks:
           if landmark in top_landmark.category_name:
