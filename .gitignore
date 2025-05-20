@@ -7,3 +7,9 @@ dlib/
 compound/
 basic/
 *.zip
+tuner_dir/
+Database/basic
+Database/compound
+Database/old
+test_images/
+*.keras
