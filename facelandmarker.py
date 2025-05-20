@@ -10,7 +10,7 @@ import face_recognition
 model_path = "/Users/glenchua/Documents/thesis_project/face_landmarker.task"
 
 # Change input picture here
-IMAGE_PATH = '4Head.jpg'
+IMAGE_PATH = 'ben.jpeg'
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   face_landmarks_list = detection_result.face_landmarks
