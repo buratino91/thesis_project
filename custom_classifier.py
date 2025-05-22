@@ -1,7 +1,6 @@
 import tensorflow as tf
 import keras
 from keras import layers
-import matplotlib.pyplot as plt
 import pandas as pd
 from keras import callbacks
 import keras_tuner as kt
@@ -10,6 +9,9 @@ import os
 
 csv_path_train = os.path.join('Database', 'trainingdata_basic.csv')
 csv_path_test = os.path.join('Database', 'testdata_basic.csv')
+
+print(csv_path_test)
+print(csv_path_train)
 
 df_train = pd.read_csv(csv_path_train)
 df_test = pd.read_csv(csv_path_test)
@@ -41,6 +43,17 @@ train_dataset = train_dataset.map(load_image_and_label).batch(32).prefetch(tf.da
 # Test dataset
 test_dataset = tf.data.Dataset.from_tensor_slices((df_test['Images'], df_test["Stress?"]))
 test_dataset = test_dataset.map(load_image_and_label).batch(32).prefetch(tf.data.AUTOTUNE)
+
+
+# Class weights
+total = 8586 + 3685
+weight_for_0 = total / (2 * 8586)
+weight_for_1 = total / (2 * 3685)
+
+class_weight = {
+    0: weight_for_0,
+    1: weight_for_1
+}
 
 # For tuning
 def build_model(hp):
@@ -83,28 +96,39 @@ def build_model(hp):
 def build_best_model():
     model = tf.keras.Sequential()
 
-    model.add(layers.Conv2D(128, (3, 3), activation='relu', input_shape=(224, 224, 3))),
-    model.add(layers.MaxPooling2D((2, 2)))
-    
-    model.add(layers.Conv2D(32, (3, 3), activation='relu'))
+  # Block 1
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(224, 224, 3)))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
 
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    # Block 2
+    model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(layers.BatchNormalization())
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 3
+    model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
+    model.add(layers.BatchNormalization())
+    model.add(layers.MaxPooling2D((2, 2)))
+
+    # Block 4
+    model.add(layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
+    model.add(layers.BatchNormalization())
     model.add(layers.MaxPooling2D((2, 2)))
 
     model.add(layers.Flatten())
 
-    #Dense layers
-    model.add(layers.Dense(256, activation='relu'))
-    model.add(layers.Dropout(0.42867))
+    # Dense Layers
+    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dropout(0.4))
 
     model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dropout(0.42867))
-
+    model.add(layers.Dropout(0.3))
+    
     # Output layer
     model.add(layers.Dense(1, activation='sigmoid'))
 
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0010384),
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
                   loss='binary_crossentropy',
                   metrics=['accuracy']
     )
@@ -114,18 +138,16 @@ best_model = build_best_model()
 # best_model.summary()
 
 # Train the model
-# history = best_model.fit(
-#     train_dataset,
-#     epochs=30,
-#     validation_data=test_dataset,
-#     callbacks=[
-#         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3),
-#     ]
-# )
+history = best_model.fit(
+    train_dataset,
+    epochs=10,
+    validation_data=test_dataset,
+    class_weight=class_weight
+)
 
-# test_loss, test_acc = best_model.evaluate(test_dataset)
-# print(f"Test accuracy: {test_acc:.4f}")
-# print(f"Test loss: {test_loss:.4f}")
+test_loss, test_acc = best_model.evaluate(test_dataset)
+print(f"Test accuracy: {test_acc:.4f}")
+print(f"Test loss: {test_loss:.4f}")
 
 # tuner = kt.Hyperband(
 #     build_model,
@@ -151,8 +173,8 @@ best_model = build_best_model()
 # best_model.summary()
 
 # model.fit(train_dataset, epochs=10, validation_data=test_dataset)
-best_model.save('best_model_stress.keras')
-print('Model saved successfully')
+# best_model.save('best_model_stress.keras')
+# print('Model saved successfully')
 
 
 
