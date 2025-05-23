@@ -6,7 +6,8 @@ from keras import callbacks
 import keras_tuner as kt
 from keras_tuner import HyperModel 
 import os
-
+from sklearn.utils import class_weight
+import numpy as np
 csv_path_train = os.path.join('Database', 'trainingdata_basic.csv')
 csv_path_test = os.path.join('Database', 'testdata_basic.csv')
 
@@ -19,6 +20,12 @@ df_test = pd.read_csv(csv_path_test)
 df_train['Images'] = df_train['Images'].apply(lambda x: os.path.join('Database', x.split('Database/')[-1]))
 df_test['Images'] = df_test['Images'].apply(lambda x: os.path.join('Database', x.split('Database/')[-1]))
 
+base_model = tf.keras.applications.MobileNetV2(
+    input_shape=(224, 224, 3),
+    include_top=False,
+    weights='imagenet'
+)
+base_model.trainable = False
 
 # tf.data pipeline
 def load_image_and_label(image_path, label):
@@ -31,29 +38,29 @@ def load_image_and_label(image_path, label):
     # Resize images to 224x224
     image = tf.image.resize(image, [224, 224])
 
+    label = label - 1
+    label = tf.cast(label, tf.int32)
     # Normalize pixel values
     image = image / 255.0
 
     return image, label
 
 # Train dataset
-train_dataset = tf.data.Dataset.from_tensor_slices((df_train['Images'], df_train["Stress?"]))
-train_dataset = train_dataset.map(load_image_and_label).batch(32).prefetch(tf.data.AUTOTUNE)
+train_dataset = tf.data.Dataset.from_tensor_slices((df_train['Images'], df_train["Label"]))
+train_dataset = train_dataset.map(load_image_and_label).batch(32).prefetch(tf.data.AUTOTUNE).shuffle(buffer_size=train_dataset.cardinality())
 
 # Test dataset
-test_dataset = tf.data.Dataset.from_tensor_slices((df_test['Images'], df_test["Stress?"]))
-test_dataset = test_dataset.map(load_image_and_label).batch(32).prefetch(tf.data.AUTOTUNE)
+test_dataset = tf.data.Dataset.from_tensor_slices((df_test['Images'], df_test["Label"]))
+test_dataset = test_dataset.map(load_image_and_label).batch(32).prefetch(tf.data.AUTOTUNE).shuffle(buffer_size=test_dataset.cardinality())
 
 
 # Class weights
-total = 8586 + 3685
-weight_for_0 = total / (2 * 8586)
-weight_for_1 = total / (2 * 3685)
-
-class_weight = {
-    0: weight_for_0,
-    1: weight_for_1
-}
+class_weights = class_weight.compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(df_train['Label']),
+    y=df_train['Label']
+)
+class_weights = dict(enumerate(class_weights))
 
 # For tuning
 def build_model(hp):
@@ -94,43 +101,16 @@ def build_model(hp):
 
 # Build model from tuned parameters
 def build_best_model():
-    model = tf.keras.Sequential()
-
-  # Block 1
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(224, 224, 3)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
-
-    # Block 2
-    model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
-
-    # Block 3
-    model.add(layers.Conv2D(128, (3, 3), activation='relu', padding='same'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
-
-    # Block 4
-    model.add(layers.Conv2D(256, (3, 3), activation='relu', padding='same'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2, 2)))
-
-    model.add(layers.Flatten())
-
-    # Dense Layers
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dropout(0.4))
-
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dropout(0.3))
-    
-    # Output layer
-    model.add(layers.Dense(1, activation='sigmoid'))
-
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
-                  loss='binary_crossentropy',
-                  metrics=['accuracy']
+    model = tf.keras.Sequential([
+    base_model,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(7, activation='softmax')
+])
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0005),
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'],
     )
     return model
 
@@ -142,7 +122,7 @@ history = best_model.fit(
     train_dataset,
     epochs=10,
     validation_data=test_dataset,
-    class_weight=class_weight
+    class_weight=class_weights
 )
 
 test_loss, test_acc = best_model.evaluate(test_dataset)
