@@ -11,14 +11,15 @@ import numpy as np
 csv_path_train = os.path.join('Database', 'trainingdata_basic.csv')
 csv_path_test = os.path.join('Database', 'testdata_basic.csv')
 
-print(csv_path_test)
-print(csv_path_train)
 
 df_train = pd.read_csv(csv_path_train)
 df_test = pd.read_csv(csv_path_test)
 
+
+
 df_train['Images'] = df_train['Images'].apply(lambda x: os.path.join('Database', x.split('Database/')[-1]))
 df_test['Images'] = df_test['Images'].apply(lambda x: os.path.join('Database', x.split('Database/')[-1]))
+
 
 base_model = tf.keras.applications.MobileNetV2(
     input_shape=(224, 224, 3),
@@ -99,7 +100,7 @@ def build_model(hp):
     )
     return model   
 
-# Build model from tuned parameters
+# Build model 
 def build_best_model():
     model = tf.keras.Sequential([
     base_model,
@@ -120,7 +121,7 @@ best_model = build_best_model()
 # Train the model
 history = best_model.fit(
     train_dataset,
-    epochs=10,
+    epochs=30,
     validation_data=test_dataset,
     class_weight=class_weights
 )
