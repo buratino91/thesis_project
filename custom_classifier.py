@@ -260,17 +260,17 @@ callbacks_list = [
 ]
 
 # Stage 1: Train with frozen base model
-print("\n" + "="*60)
-print("STAGE 1: Training with frozen base model (Balanced Data)")
-print("="*60)
+# print("\n" + "="*60)
+# print("STAGE 1: Training with frozen base model (Balanced Data)")
+# print("="*60)
 
-history_1 = model.fit(
-    train_dataset,
-    epochs=10,
-    validation_data=val_dataset,
-    callbacks=callbacks_list,
-    verbose=1
-)
+# history_1 = model.fit(
+#     train_dataset,
+#     epochs=10,
+#     validation_data=val_dataset,
+#     callbacks=callbacks_list,
+#     verbose=1
+# )
 
 # Evaluate after stage 1
 print("\nEvaluating after Stage 1...")
@@ -329,13 +329,13 @@ fine_tune_callbacks = [
     )
 ]
 
-history_2 = model.fit(
-    train_dataset,
-    epochs=20,
-    validation_data=val_dataset,
-    callbacks=fine_tune_callbacks,
-    verbose=1
-)
+# history_2 = model.fit(
+#     train_dataset,
+#     epochs=20,
+#     validation_data=val_dataset,
+#     callbacks=fine_tune_callbacks,
+#     verbose=1
+# )
 
 # Final evaluation
 print("\n" + "="*60)
