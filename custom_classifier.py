@@ -9,7 +9,6 @@ import os
 from sklearn.utils import class_weight, resample
 import numpy as np
 from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import SMOTE
 from collections import Counter
 from sklearn.metrics import precision_score, recall_score
 
@@ -267,7 +266,7 @@ print("="*60)
 
 history_1 = model.fit(
     train_dataset,
-    epochs=30,
+    epochs=10,
     validation_data=val_dataset,
     callbacks=callbacks_list,
     verbose=1
