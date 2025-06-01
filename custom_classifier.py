@@ -22,6 +22,7 @@ train_ds = keras.utils.image_dataset_from_directory(
     image_size=(img_height, img_width),
     batch_size=batch_size
 )
+class_names = train_ds.class_names
 
 val_ds = keras.utils.image_dataset_from_directory(
     train_dir,
@@ -68,16 +69,27 @@ model.compile(
     metrics=['accuracy']
 )
 
-history = model.fit(
-    preprocessed_ds_train,
-    epochs=10,
-    validation_data=preprocessed_ds_val
+# history = model.fit(
+#     preprocessed_ds_train,
+#     epochs=30,
+#     validation_data=preprocessed_ds_val
+# )
+
+# test_loss, test_acc = model.evaluate(val_ds)
+# print(f"Test Accuracy: {test_acc * 100:.2f}%")
+
+# Test model on an image
+img = keras.utils.load_img('istock-1351285222-sad-man-wit-tear-lr-jpg.jpg', target_size=(img_height, img_width))
+img_array = keras.utils.img_to_array(img)
+img_array = tf.expand_dims(img_array, 0)
+predictions = model.predict(img_array)
+score = tf.nn.softmax(predictions[0])
+print(
+    "This image most likely belongs to {} with a {:.2f} percent confidence."
+    .format(class_names[np.argmax(score)], 100 * np.max(score))
 )
 
-test_loss, test_acc = model.evaluate(val_ds)
-print(f"Test Accuracy: {test_acc * 100:.2f}%")
-
-
+model.save('custom_vgg19.keras')
 # Compound labels
 # 1: Happily Surprised
 # 2: Happily Disgusted
