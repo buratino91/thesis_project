@@ -13,3 +13,4 @@ Database/compound
 Database/old
 test_images/
 *.keras
+*.png
