@@ -16,7 +16,6 @@ base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/train')
 test_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test')
 
-# model = keras.models.load_model('custom_vgg19.keras')
 
 img_height = 224
 img_width = 224
@@ -32,8 +31,7 @@ train_ds = keras.utils.image_dataset_from_directory(
     subset='training',
     seed=123
 )
-for images, labels in train_ds.take(1):
-    print("Labels shape:", labels.shape)
+
 
 val_ds = keras.utils.image_dataset_from_directory(
     train_dir,
@@ -74,6 +72,8 @@ def preprocess_input(image, label):
     image = keras.applications.vgg19.preprocess_input(image)
     return image, label
 
+
+
 train_ds = train_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 val_ds = val_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 # preprocessed_ds_test = test_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
@@ -93,7 +93,9 @@ for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
 model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(256),
+    keras.layers.BatchNormalization(),
+    keras.layers.Activation('relu'),
     keras.layers.Dropout(0.5),
     keras.layers.Dense(7, activation='softmax')
 ])
@@ -106,12 +108,12 @@ model.compile(
 
 history = model.fit(
     train_ds,
-    epochs=30,
+    epochs=20,
     validation_data=val_ds,
     class_weight=class_weights,
 )
 
-model.save('best_customVgg19.keras')
+# model.save('best_customVgg19.keras')
 
 test_loss, test_acc = model.evaluate(val_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
