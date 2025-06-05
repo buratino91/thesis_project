@@ -62,11 +62,14 @@ class_weights = {
     for i, count in enumerate(class_counts)
 }
 
-test_ds = keras.utils.image_dataset_from_directory(
+test_ds = keras.utils.image_dataset_from_directory( # returns (images, label)
     test_dir,
     image_size=(img_height, img_width),
-    batch_size=batch_size
+    batch_size=batch_size,
+    labels='inferred'
 )
+
+test_classnames = test_ds.class_names
 
 def preprocess_input(image, label):
     image = keras.applications.vgg19.preprocess_input(image)
@@ -76,7 +79,7 @@ def preprocess_input(image, label):
 
 train_ds = train_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 val_ds = val_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
-# preprocessed_ds_test = test_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
+test_ds = test_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 
 
 
@@ -94,6 +97,7 @@ model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
     keras.layers.Dense(256),
+    keras.layers.Dropout(0.5),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     keras.layers.Dropout(0.5),
@@ -106,17 +110,18 @@ model.compile(
     metrics=['accuracy']
 )
 
-history = model.fit(
-    train_ds,
-    epochs=20,
-    validation_data=val_ds,
-    class_weight=class_weights,
-)
+# history = model.fit(
+#     train_ds,
+#     epochs=30,
+#     validation_data=val_ds,
+#     class_weight=class_weights,
+# )
 
 # model.save('best_customVgg19.keras')
 
-test_loss, test_acc = model.evaluate(val_ds)
-print(f"Test Accuracy: {test_acc * 100:.2f}%")
+# test_loss, test_acc = model.evaluate(val_ds)
+# print(f"Test Accuracy: {test_acc * 100:.2f}%")
+
 
 # Test model on an image
 # img = keras.utils.load_img('istock-1351285222-sad-man-wit-tear-lr-jpg.jpg', target_size=(img_height, img_width))
@@ -130,18 +135,19 @@ print(f"Test Accuracy: {test_acc * 100:.2f}%")
 # )
 
 # Test model with dir of images and check confusion matrix
-# predictions = model.predict(preprocessed_ds_test)
-# predicted_classes = np.argmax(predictions, axis=1)
-# true_labels = np.concatenate([y for x, y in test_ds], axis=0)
+predictions = model.predict(test_ds)
+predicted_classes = np.argmax(predictions, axis=1)
+true_labels = np.concatenate([y for x, y in test_ds], axis=0)
 
-# cm = confusion_matrix(true_labels, predicted_classes)
-# sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_ds.class_names, yticklabels=test_ds.class_names)
-# plt.xlabel('Predicted Label')
-# plt.ylabel('True Label')
-# plt.title('Confusion Matrix')
-# plt.show()
 
-# model.save('custom_vgg19.keras')
+cm = confusion_matrix(true_labels, predicted_classes)
+sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.show()
+
+
 # Compound labels
 # 1: Happily Surprised
 # 2: Happily Disgusted
