@@ -3,6 +3,7 @@ import os
 import PIL
 import PIL.Image
 import tensorflow as tf
+from keras import regularizers
 import pathlib
 import os
 import keras
@@ -66,7 +67,9 @@ test_ds = keras.utils.image_dataset_from_directory( # returns (images, label)
     test_dir,
     image_size=(img_height, img_width),
     batch_size=batch_size,
-    labels='inferred'
+    labels='inferred',
+    seed=123,
+    label_mode='categorical'
 )
 
 test_classnames = test_ds.class_names
@@ -96,12 +99,12 @@ for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
 model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dense(256),
+    keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.001)),
     keras.layers.Dropout(0.5),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     keras.layers.Dropout(0.5),
-    keras.layers.Dense(7, activation='softmax')
+    keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.001))
 ])
 
 model.compile(
@@ -110,17 +113,17 @@ model.compile(
     metrics=['accuracy']
 )
 
-# history = model.fit(
-#     train_ds,
-#     epochs=30,
-#     validation_data=val_ds,
-#     class_weight=class_weights,
-# )
+history = model.fit(
+    train_ds,
+    epochs=40,
+    validation_data=val_ds,
+    class_weight=class_weights,
+)
 
-# model.save('best_customVgg19.keras')
+model.save('best_customVgg19_v2.keras')
 
-# test_loss, test_acc = model.evaluate(val_ds)
-# print(f"Test Accuracy: {test_acc * 100:.2f}%")
+test_loss, test_acc = model.evaluate(test_ds)
+print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
 
 # Test model on an image
@@ -135,31 +138,18 @@ model.compile(
 # )
 
 # Test model with dir of images and check confusion matrix
-predictions = model.predict(test_ds)
-predicted_classes = np.argmax(predictions, axis=1)
-true_labels = np.concatenate([y for x, y in test_ds], axis=0)
+# predictions = model.predict(test_ds)
+# predicted_classes = np.argmax(predictions, axis=1)
+# true_labels = np.concatenate([y for x, y in test_ds], axis=0)
 
 
-cm = confusion_matrix(true_labels, predicted_classes)
-sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
-plt.show()
+# cm = confusion_matrix(true_labels, predicted_classes)
+# sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
+# plt.xlabel('Predicted Label')
+# plt.ylabel('True Label')
+# plt.title('Confusion Matrix')
+# plt.show()
 
-
-# Compound labels
-# 1: Happily Surprised
-# 2: Happily Disgusted
-# 3: Sadly Fearful
-# 4: Sadly Angry
-# 5: Sadly Surprised    
-# 6: Sadly Disgusted
-# 7: Fearfully Angry
-# 8: Fearfully Surprised
-# 9: Angrily Surprised
-# 10: Angrily Disgusted
-# 11: Disgustedly Surprised
 
 
 # #     1: 'Surprise',
