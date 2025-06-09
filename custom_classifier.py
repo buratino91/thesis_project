@@ -99,12 +99,13 @@ for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
 model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.001)),
-    keras.layers.Dropout(0.5),
+    keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.01)),
+    keras.layers.Dropout(0.6),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
-    keras.layers.Dropout(0.5),
-    keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.001))
+    keras.layers.Dropout(0.6),
+    keras.layers.BatchNormalization(),
+    keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.01))
 ])
 
 model.compile(
@@ -120,7 +121,7 @@ history = model.fit(
     class_weight=class_weights,
 )
 
-model.save('best_customVgg19_v2.keras')
+# model.save('best_customVgg19_v3.keras')
 
 test_loss, test_acc = model.evaluate(test_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
