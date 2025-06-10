@@ -84,7 +84,21 @@ train_ds = train_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 val_ds = val_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 test_ds = test_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 
+# Early stopping
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor='va;_loss',
+    patience=15,
+    restore_best_weights=True,
+    mode='min'
+)
 
+# Reduce learning rate when metric has stopped improving
+reduce_lr = keras.callbacks.ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.2,
+    patience=5,
+    min_lr=1e-5
+)
 
 base_model = keras.applications.VGG19(
   include_top=False,
@@ -99,26 +113,28 @@ for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
 model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.01)),
+    keras.layers.Dropout(0.6),
+    keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.0085)),
     keras.layers.Dropout(0.6),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     keras.layers.Dropout(0.6),
     keras.layers.BatchNormalization(),
-    keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.01))
+    keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.0085))
 ])
 
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-5),
+    optimizer=keras.optimizers.Adam(1e-3),
     loss='categorical_crossentropy',
     metrics=['accuracy']
 )
 
 history = model.fit(
     train_ds,
-    epochs=40,
+    epochs=60,
     validation_data=val_ds,
     class_weight=class_weights,
+    callbacks=[early_stopping, reduce_lr]
 )
 
 # model.save('best_customVgg19_v3.keras')
