@@ -17,6 +17,7 @@ base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/train')
 test_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test')
 
+checkpoint_filepath = 'checkpoint/checkpoint.model.keras'
 
 img_height = 224
 img_width = 224
@@ -100,6 +101,15 @@ reduce_lr = keras.callbacks.ReduceLROnPlateau(
     min_lr=1e-5
 )
 
+# save model checkpoint during training
+model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    monitor='val_accuracy',
+    mode='max',
+    save_best_only=True,
+    verbose=1
+)
+
 base_model = keras.applications.VGG19(
   include_top=False,
   weights='imagenet',
@@ -113,12 +123,12 @@ for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
 model = keras.Sequential([
     base_model,
     keras.layers.GlobalAveragePooling2D(),
-    keras.layers.Dropout(0.6),
+    keras.layers.Dropout(0.5),
     keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.0085)),
-    keras.layers.Dropout(0.6),
+    keras.layers.Dropout(0.5),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
-    keras.layers.Dropout(0.6),
+    keras.layers.Dropout(0.5),
     keras.layers.BatchNormalization(),
     keras.layers.Dense(7, activation='softmax', kernel_regularizer=regularizers.l2(0.0085))
 ])
@@ -134,7 +144,7 @@ history = model.fit(
     epochs=60,
     validation_data=val_ds,
     class_weight=class_weights,
-    callbacks=[early_stopping, reduce_lr]
+    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback]
 )
 
 # model.save('best_customVgg19_v3.keras')
