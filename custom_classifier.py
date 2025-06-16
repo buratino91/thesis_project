@@ -13,12 +13,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 
-logging.basicConfig(filename="log_file.txt", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    filename="log_file.txt",
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train")
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test")
-test_FER_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test_FER')
+test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
 checkpoint_filepath = "checkpoint/checkpoint.model.keras"
 
