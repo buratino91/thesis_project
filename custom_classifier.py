@@ -125,8 +125,9 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-# for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
-#     layer.trainable = False
+for layer in base_model.layers:  # Freeze all except last 2 layers
+    if 'block5' in layer.name:
+        layer.trainable = True
 
 model = keras.Sequential(
     [
@@ -146,21 +147,20 @@ model = keras.Sequential(
 )
 
 # model_checkpoint = keras.models.load_model(checkpoint_filepath)
-
 model.compile(
     optimizer=keras.optimizers.Adam(1e-3),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
 
-model.summary()
-# history = model.fit(
-#     train_ds,
-#     epochs=60,
-#     validation_data=val_ds,
-#     class_weight=class_weights,
-#     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
-# )
+# model.summary()
+history = model.fit(
+    train_ds,
+    epochs=60,
+    validation_data=val_ds,
+    class_weight=class_weights,
+    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
+)
 
 test_loss, test_acc = model.evaluate(test_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
