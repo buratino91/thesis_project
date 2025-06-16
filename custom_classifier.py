@@ -11,17 +11,20 @@ from sklearn.metrics import confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
 import matplotlib.pyplot as plt
 import seaborn as sns
-from imblearn.over_sampling import SMOTE
+import logging
+
+logging.basicConfig(filename="log_file.txt", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train")
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test")
+test_FER_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test_FER')
 
 checkpoint_filepath = "checkpoint/checkpoint.model.keras"
 
 img_height = 224
 img_width = 224
-batch_size = 32
+batch_size = 16
 
 train_ds = keras.utils.image_dataset_from_directory(
     train_dir,
@@ -65,6 +68,7 @@ class_weights = {
     i: total_samples / (len(class_counts) * count)
     for i, count in enumerate(class_counts)
 }
+print(class_weights)
 
 test_ds = keras.utils.image_dataset_from_directory(  # returns (images, label)
     test_dir,
@@ -89,7 +93,7 @@ test_ds = test_ds.map(preprocess_input).cache().prefetch(tf.data.AUTOTUNE)
 
 # Early stopping
 early_stopping = keras.callbacks.EarlyStopping(
-    monitor="va;_loss", patience=15, restore_best_weights=True, mode="min"
+    monitor="val_loss", patience=15, restore_best_weights=True, mode="min"
 )
 
 # Reduce learning rate when metric has stopped improving
@@ -111,6 +115,7 @@ data_augmentation = keras.Sequential(
     [
         keras.layers.RandomFlip("horizontal_and_vertical"),
         keras.layers.RandomRotation(0.2),
+        keras.layers.RandomZoom(0.2),
     ]
 )
 
@@ -141,21 +146,23 @@ model = keras.Sequential(
     ]
 )
 
+# model_checkpoint = keras.models.load_model(checkpoint_filepath)
+
 model.compile(
     optimizer=keras.optimizers.Adam(1e-3),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
 
-history = model.fit(
-    train_ds,
-    epochs=60,
-    validation_data=val_ds,
-    class_weight=class_weights,
-    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
-)
+model.summary()
 
-# model.save('best_customVgg19_v3.keras')
+# history = model.fit(
+#     train_ds,
+#     epochs=60,
+#     validation_data=val_ds,
+#     class_weight=class_weights,
+#     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
+# )
 
 test_loss, test_acc = model.evaluate(test_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
