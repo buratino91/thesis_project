@@ -13,22 +13,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 
-logging.basicConfig(
-    filename="log_file.txt",
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+logging.basicConfig(filename="log_file.txt", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train")
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test")
-test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
+test_FER_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test_FER')
 
-checkpoint_filepath = "checkpoint/checkpoint.model.keras"
+checkpoint_filepath = "checkpoint/mdpi_checkpoint.model.keras"
 
-img_height = 224
-img_width = 224
-batch_size = 16
+img_height = 124
+img_width = 124
+batch_size = 32
 
 train_ds = keras.utils.image_dataset_from_directory(
     train_dir,
@@ -72,7 +68,7 @@ class_weights = {
     i: total_samples / (len(class_counts) * count)
     for i, count in enumerate(class_counts)
 }
-print(class_weights)
+
 
 test_ds = keras.utils.image_dataset_from_directory(  # returns (images, label)
     test_dir,
@@ -128,24 +124,23 @@ base_model = keras.applications.VGG19(
     include_top=False, weights="imagenet", input_shape=(img_height, img_width, 3)
 )
 # Freeze base model
-base_model.trainable = True
-for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
-    layer.trainable = False
+base_model.trainable = False
+# for layer in base_model.layers[:-4]:  # Freeze all except last 4 layers
+#     layer.trainable = False
 
 model = keras.Sequential(
     [
         base_model,
         data_augmentation,
-        keras.layers.GlobalAveragePooling2D(),
-        keras.layers.Dropout(0.5),
-        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.0085)),
-        keras.layers.Dropout(0.5),
+        keras.layers.Flatten(),
+        keras.layers.Dense(256),
         keras.layers.BatchNormalization(),
-        keras.layers.Activation("relu"),
         keras.layers.Dropout(0.5),
+        keras.layers.Dense(512),
         keras.layers.BatchNormalization(),
+        keras.layers.Dropout(0.5),
         keras.layers.Dense(
-            7, activation="softmax", kernel_regularizer=regularizers.l2(0.0085)
+            7, activation="softmax"
         ),
     ]
 )
@@ -159,7 +154,6 @@ model.compile(
 )
 
 model.summary()
-
 # history = model.fit(
 #     train_ds,
 #     epochs=60,
