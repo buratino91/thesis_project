@@ -13,12 +13,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 
-logging.basicConfig(filename="log_file.txt", level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    filename="log_file.txt",
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train")
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test")
-test_FER_dir = os.path.join(base_dir, 'Database/basic/Image/aligned/test_FER')
+test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
 checkpoint_filepath = "checkpoint/mdpi_checkpoint.model.keras"
 
@@ -125,23 +129,23 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers:  # Freeze all except last 2 layers
-    if 'block5' in layer.name:
-        layer.trainable = True
+# for layer in base_model.layers[:-1]:  # Freeze all except last 2 layers
+#         layer.trainable = True
 
 model = keras.Sequential(
     [
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(256),
+        keras.layers.Dense(256, activation="relu"),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.5),
-        keras.layers.Dense(512),
+        keras.layers.Dropout(0.3),
+        keras.layers.Dense(512, activation="relu"),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.5),
+        keras.layers.Dropout(0.3),
         keras.layers.Dense(
-            7, activation="softmax"
+            7,
+            activation="softmax",
         ),
     ]
 )
