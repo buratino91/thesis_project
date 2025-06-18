@@ -129,18 +129,18 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-# for layer in base_model.layers[:-1]:  # Freeze all except last 2 layers
-#         layer.trainable = True
+for layer in base_model.layers[:-4]:  # Freeze all except last 2 layers
+        layer.trainable = True
 
 model = keras.Sequential(
     [
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(256, activation="relu"),
+        keras.layers.Dense(256),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.3),
-        keras.layers.Dense(512, activation="relu"),
+        keras.layers.Dense(512),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(
