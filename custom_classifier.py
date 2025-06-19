@@ -20,8 +20,8 @@ logging.basicConfig(
 )
 
 base_dir = os.getcwd()
-train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train")
-test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test")
+train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes")
+test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_3_classes")
 test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
 checkpoint_filepath = "checkpoint/mdpi_checkpoint.model.keras"
@@ -129,7 +129,7 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers[:-4]:  # Freeze all except last 2 layers
+for layer in base_model.layers[:-2]: 
         layer.trainable = True
 
 model = keras.Sequential(
@@ -144,13 +144,13 @@ model = keras.Sequential(
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(
-            7,
+            3,
             activation="softmax",
         ),
     ]
 )
 
-# model_checkpoint = keras.models.load_model(checkpoint_filepath)
+#model_checkpoint = keras.models.load_model(checkpoint_filepath)
 model.compile(
     optimizer=keras.optimizers.Adam(1e-3),
     loss="categorical_crossentropy",
