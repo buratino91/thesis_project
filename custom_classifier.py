@@ -129,7 +129,7 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers[:-2]: 
+for layer in base_model.layers[:-12]: 
         layer.trainable = True
 
 model = keras.Sequential(
@@ -139,10 +139,8 @@ model = keras.Sequential(
         keras.layers.Flatten(),
         keras.layers.Dense(256),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
         keras.layers.Dense(512),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
         keras.layers.Dense(
             3,
             activation="softmax",
