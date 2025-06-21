@@ -24,7 +24,7 @@ train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_3_classes")
 test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
-checkpoint_filepath = "checkpoint/mdpi_checkpoint.model.keras"
+checkpoint_filepath = "checkpoint/mdpi_block5and4_checkpoint.model.keras"
 
 img_height = 124
 img_width = 124
@@ -129,9 +129,9 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers: 
-        if "block5" in layer.name:
-              layer.trainable = True
+for layer in base_model.layers[-12]:
+    layer.trainable = True
+
 
 model = keras.Sequential(
     [
