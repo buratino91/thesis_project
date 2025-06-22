@@ -129,8 +129,9 @@ base_model = keras.applications.VGG19(
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers[-12]:
-    layer.trainable = True
+for layer in base_model.layers:
+    if "block4" in layer.name or "block5" in layer.name:
+        layer.trainable = True
 
 
 model = keras.Sequential(
@@ -138,34 +139,34 @@ model = keras.Sequential(
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(256),
+        keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.0085)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
-        keras.layers.Dense(512),
+        keras.layers.Dense(512, kernel_regularizer=regularizers.l2(0.0085)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
         keras.layers.Dense(
             3,
-            activation="softmax",
+            activation="softmax", kernel_regularizer=regularizers.l2(0.0085)
         ),
     ]
 )
 
 #model_checkpoint = keras.models.load_model(checkpoint_filepath)
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-3),
+    optimizer=keras.optimizers.Adam(1e-4),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
 
-model.summary()
-# history = model.fit(
-#     train_ds,
-#     epochs=60,
-#     validation_data=val_ds,
-#     class_weight=class_weights,
-#     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
-# )
+# model.summary()
+history = model.fit(
+    train_ds,
+    epochs=60,
+    validation_data=val_ds,
+    class_weight=class_weights,
+    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
+)
 
 test_loss, test_acc = model.evaluate(test_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
