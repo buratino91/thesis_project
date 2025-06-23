@@ -24,7 +24,7 @@ train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_3_classes")
 test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
-checkpoint_filepath = "checkpoint/mdpi_block5and4_checkpoint.model.keras"
+checkpoint_filepath = "checkpoint/simplified_checkpoint.model.keras"
 
 img_height = 124
 img_width = 124
@@ -142,7 +142,7 @@ model = keras.Sequential(
         keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.01)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.3),
-        keras.layers.Dense(512, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.01)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(
@@ -154,7 +154,7 @@ model = keras.Sequential(
 
 #model_checkpoint = keras.models.load_model(checkpoint_filepath)
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-4),
+    optimizer=keras.optimizers.Adam(1e-3),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
