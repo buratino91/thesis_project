@@ -118,8 +118,9 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 data_augmentation = keras.Sequential(
     [
         keras.layers.RandomFlip("horizontal_and_vertical"),
-        keras.layers.RandomRotation(0.2),
-        keras.layers.RandomZoom(0.2),
+        keras.layers.RandomRotation(0.1),
+        keras.layers.RandomZoom(0.1),
+        keras.layers.RandomTranslation(0.2, 0.2)
     ]
 )
 
@@ -139,22 +140,22 @@ model = keras.Sequential(
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.1)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
-        keras.layers.Dense(256, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.1)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
+        keras.layers.Dropout(0.5),
         keras.layers.Dense(
             3,
-            activation="softmax", kernel_regularizer=regularizers.l2(0.01)
+            activation="softmax", kernel_regularizer=regularizers.l2(0.1)
         ),
     ]
 )
 
 #model_checkpoint = keras.models.load_model(checkpoint_filepath)
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-3),
+    optimizer=keras.optimizers.Adam(1e-4),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
