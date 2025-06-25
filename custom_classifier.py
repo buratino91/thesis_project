@@ -140,10 +140,10 @@ model = keras.Sequential(
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.1)),
+        keras.layers.Dense(32, kernel_regularizer=regularizers.L1L2(0.1, 0.1)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
-        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.1)),
+        keras.layers.Dense(64, kernel_regularizer=regularizers.L1L2(0.1, 0.1)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
         keras.layers.Dense(
