@@ -24,7 +24,7 @@ train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes
 test_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_3_classes")
 test_FER_dir = os.path.join(base_dir, "Database/basic/Image/aligned/test_FER")
 
-checkpoint_filepath = "checkpoint/simplified_checkpoint.model.keras"
+checkpoint_filepath = "checkpoint/vgg16_checkpoint.model.keras"
 
 img_height = 124
 img_width = 124
@@ -53,13 +53,6 @@ val_ds = keras.utils.image_dataset_from_directory(
     batch_size=batch_size,
 )
 
-# Class weights
-# Get class names and counts from the dataset
-
-# y_train_int = np.concatenate([y.numpy().argmax(axis=1) for x, y in train_ds])
-# class_weights = dict(enumerate(
-#     compute_class_weight('balanced', classes=np.unique(y_train_int), y=y_train_int)
-# ))
 
 class_names = train_ds.class_names
 class_counts = np.bincount(
@@ -87,7 +80,7 @@ test_classnames = test_ds.class_names
 
 
 def preprocess_input(image, label):
-    image = keras.applications.vgg19.preprocess_input(image)
+    image = keras.applications.vgg16.preprocess_input(image)
     return image, label
 
 
@@ -125,14 +118,14 @@ data_augmentation = keras.Sequential(
 )
 
 
-base_model = keras.applications.VGG19(
+base_model = keras.applications.VGG16(
     include_top=False, weights="imagenet", input_shape=(img_height, img_width, 3)
 )
 # Freeze base model
 base_model.trainable = False
-for layer in base_model.layers:
-    if "block4" in layer.name or "block5" in layer.name:
-        layer.trainable = True
+# for layer in base_model.layers:
+#     if "block4" in layer.name or "block5" in layer.name:
+#         layer.trainable = True
 
 
 model = keras.Sequential(
@@ -140,15 +133,15 @@ model = keras.Sequential(
         base_model,
         data_augmentation,
         keras.layers.Flatten(),
-        keras.layers.Dense(32, kernel_regularizer=regularizers.L1L2(0.1, 0.1)),
+        keras.layers.Dense(32, kernel_regularizer=regularizers.l2(0.01)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
-        keras.layers.Dense(64, kernel_regularizer=regularizers.L1L2(0.1, 0.1)),
+        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.01)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
         keras.layers.Dense(
             3,
-            activation="softmax", kernel_regularizer=regularizers.l2(0.1)
+            activation="softmax", kernel_regularizer=regularizers.l2(0.01)
         ),
     ]
 )
