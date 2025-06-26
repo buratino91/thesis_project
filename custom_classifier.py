@@ -113,42 +113,44 @@ data_augmentation = keras.Sequential(
         keras.layers.RandomFlip("horizontal_and_vertical"),
         keras.layers.RandomRotation(0.1),
         keras.layers.RandomZoom(0.1),
-        keras.layers.RandomTranslation(0.2, 0.2)
+        keras.layers.RandomTranslation(0.2, 0.2),
     ]
 )
 
 
 base_model = keras.applications.VGG16(
-    include_top=False, weights="imagenet", input_shape=(img_height, img_width, 3)
+    include_top=False,
+    weights="imagenet",
+    input_shape=(img_height, img_width, 3),
+    pooling="max",
 )
 # Freeze base model
 base_model.trainable = False
-# for layer in base_model.layers:
-#     if "block4" in layer.name or "block5" in layer.name:
-#         layer.trainable = True
 
+for layer in base_model.layers:
+    if "block5" in layer.name:
+        base_model.trainable = True
 
 model = keras.Sequential(
     [
-        base_model,
         data_augmentation,
+        base_model,
         keras.layers.Flatten(),
-        keras.layers.Dense(32, kernel_regularizer=regularizers.l2(0.01)),
-        keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.5),
         keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.01)),
         keras.layers.BatchNormalization(),
         keras.layers.Dropout(0.5),
+        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.BatchNormalization(),
+        keras.layers.Dropout(0.5),
         keras.layers.Dense(
-            3,
-            activation="softmax", kernel_regularizer=regularizers.l2(0.01)
+            3, activation="softmax", kernel_regularizer=regularizers.l2(0.01)
         ),
     ]
 )
 
-#model_checkpoint = keras.models.load_model(checkpoint_filepath)
+# model_checkpoint = keras.models.load_model(checkpoint_filepath)
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-4),
+    optimizer=keras.optimizers.Adam(1e-5),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
@@ -156,7 +158,7 @@ model.compile(
 # model.summary()
 history = model.fit(
     train_ds,
-    epochs=60,
+    epochs=30,
     validation_data=val_ds,
     class_weight=class_weights,
     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
