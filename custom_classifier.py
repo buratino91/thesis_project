@@ -136,14 +136,14 @@ model = keras.Sequential(
         data_augmentation,
         base_model,
         keras.layers.Flatten(),
-        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.5),
-        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.01)),
+        keras.layers.Dropout(0.3),
+        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.5),
+        keras.layers.Dropout(0.3),
         keras.layers.Dense(
-            3, activation="softmax", kernel_regularizer=regularizers.l2(0.01)
+            3, activation="softmax", kernel_regularizer=regularizers.l2(0.001)
         ),
     ]
 )
@@ -158,7 +158,7 @@ model.compile(
 # model.summary()
 history = model.fit(
     train_ds,
-    epochs=30,
+    epochs=60,
     validation_data=val_ds,
     class_weight=class_weights,
     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
