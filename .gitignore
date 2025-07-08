@@ -14,9 +14,5 @@ Database/old
 test_images/
 *.keras
 *.png
-<<<<<<< HEAD
-log_file.txt
-=======
 log_file.txt
 logs/
->>>>>>> correct_vgg16
