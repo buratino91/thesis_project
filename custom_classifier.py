@@ -161,17 +161,6 @@ trained_model = keras.models.load_model(checkpoint_filepath)
 # print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
 
-# Test model on an image
-# img = keras.utils.load_img('istock-1351285222-sad-man-wit-tear-lr-jpg.jpg', target_size=(img_height, img_width))
-# img_array = keras.utils.img_to_array(img)
-# img_array = tf.expand_dims(img_array, 0)
-# predictions = model.predict(img_array)
-# score = tf.nn.softmax(predictions[0])
-# print(
-#     "This image most likely belongs to {} with a {:.2f} percent confidence."
-#     .format(class_names[np.argmax(score)], 100 * np.max(score))
-# )
-
 # Test model with dir of images and check confusion matrix
 predictions = trained_model.predict(test_ds)
 y_pred = np.argmax(predictions, axis=1)
@@ -179,10 +168,16 @@ true_labels = np.concatenate([y for x, y in test_ds], axis=0)
 y_true = np.argmax(true_labels, axis=1)
 
 cm = confusion_matrix(y_true, y_pred)
-plt.figure(figsize=(8,6))
-sns.heatmap(cm, annot=True, cmap='Blues', fmt='d', xticklabels=['Negative', 'Neutral', 'Positive'], yticklabels=['Negative', 'Neutral', 'Positive'])
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    cm,
+    annot=True,
+    cmap="Blues",
+    fmt="d",
+    xticklabels=["Negative", "Neutral", "Positive"],
+    yticklabels=["Negative", "Neutral", "Positive"],
+)
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("Confusion Matrix")
 plt.show()
-
