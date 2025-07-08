@@ -70,8 +70,6 @@ test_ds = keras.utils.image_dataset_from_directory(  # returns (images, label)
     label_mode="categorical",
 )
 
-test_classnames = test_ds.class_names
-
 
 def preprocess_input(image, label):
     image = keras.applications.vgg16.preprocess_input(image)
@@ -143,21 +141,21 @@ model = keras.Sequential(
     ]
 )
 
-# model_checkpoint = keras.models.load_model(checkpoint_filepath)
-model.compile(
-    optimizer=keras.optimizers.Adam(1e-5),
-    loss="categorical_crossentropy",
-    metrics=["accuracy"],
-)
+trained_model = keras.models.load_model(checkpoint_filepath)
+# model.compile(
+#     optimizer=keras.optimizers.Adam(1e-5),
+#     loss="categorical_crossentropy",
+#     metrics=["accuracy"],
+# )
 
-# model.summary()
-history = model.fit(
-    train_ds,
-    epochs=60,
-    validation_data=val_ds,
-    class_weight=class_weights,
-    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
-)
+# # model.summary()
+# history = model.fit(
+#     train_ds,
+#     epochs=60,
+#     validation_data=val_ds,
+#     class_weight=class_weights,
+#     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
+# )
 
 # test_loss, test_acc = model.evaluate(test_ds)
 # print(f"Test Accuracy: {test_acc * 100:.2f}%")
@@ -175,13 +173,14 @@ history = model.fit(
 # )
 
 # Test model with dir of images and check confusion matrix
-predictions = model.predict(test_ds)
-predicted_classes = np.argmax(predictions, axis=1)
+predictions = trained_model.predict(test_ds)
+y_pred = np.argmax(predictions, axis=1)
 true_labels = np.concatenate([y for x, y in test_ds], axis=0)
+y_true = np.argmax(true_labels, axis=1)
 
-
-cm = confusion_matrix(true_labels, predicted_classes)
-sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
+cm = confusion_matrix(y_true, y_pred)
+plt.figure(figsize=(8,6))
+sns.heatmap(cm, annot=True, cmap='Blues', fmt='d', xticklabels=['Negative', 'Neutral', 'Positive'], yticklabels=['Negative', 'Neutral', 'Positive'])
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
