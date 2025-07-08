@@ -1,7 +1,6 @@
 import numpy as np
 import os
-import PIL
-import PIL.Image
+import seaborn as sns
 import tensorflow as tf
 from keras import regularizers
 import pathlib
@@ -10,14 +9,9 @@ import keras
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.class_weight import compute_class_weight
 import matplotlib.pyplot as plt
-import seaborn as sns
-import logging
+import datetime
 
-logging.basicConfig(
-    filename="log_file.txt",
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes")
@@ -117,6 +111,7 @@ data_augmentation = keras.Sequential(
     ]
 )
 
+tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 base_model = keras.applications.VGG16(
     include_top=False,
@@ -161,11 +156,11 @@ history = model.fit(
     epochs=60,
     validation_data=val_ds,
     class_weight=class_weights,
-    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback],
+    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
 )
 
-test_loss, test_acc = model.evaluate(test_ds)
-print(f"Test Accuracy: {test_acc * 100:.2f}%")
+# test_loss, test_acc = model.evaluate(test_ds)
+# print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
 
 # Test model on an image
@@ -180,23 +175,15 @@ print(f"Test Accuracy: {test_acc * 100:.2f}%")
 # )
 
 # Test model with dir of images and check confusion matrix
-# predictions = model.predict(test_ds)
-# predicted_classes = np.argmax(predictions, axis=1)
-# true_labels = np.concatenate([y for x, y in test_ds], axis=0)
+predictions = model.predict(test_ds)
+predicted_classes = np.argmax(predictions, axis=1)
+true_labels = np.concatenate([y for x, y in test_ds], axis=0)
 
 
-# cm = confusion_matrix(true_labels, predicted_classes)
-# sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
-# plt.xlabel('Predicted Label')
-# plt.ylabel('True Label')
-# plt.title('Confusion Matrix')
-# plt.show()
+cm = confusion_matrix(true_labels, predicted_classes)
+sns.heatmap(cm, annot=True, cmap='Blues', fmt='g', xticklabels=test_classnames, yticklabels=test_classnames)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.show()
 
-
-# #     1: 'Surprise',
-# #     2: 'Fear',
-# #     3: 'Disgust',
-# #     4: 'Happiness',
-# #     5: 'Sadness',
-# #     6: 'Anger',
-# #     7: 'Neutral'
