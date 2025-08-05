@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import datetime
 from keras.utils import plot_model
 
-log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+log_dir = "logs/Bayesian/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes")
@@ -120,7 +120,7 @@ base_model = keras.applications.VGG16(
 )
 # Freeze base model
 base_model.trainable = False
-base_model.summary()
+
 
 for layer in base_model.layers:
     if "block5" in layer.name:
@@ -131,12 +131,12 @@ model = keras.Sequential(
         data_augmentation,
         base_model,
         keras.layers.Flatten(),
-        keras.layers.Dense(64, kernel_regularizer=regularizers.l2(0.001)),
+        keras.layers.Dense(352, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
-        keras.layers.Dense(128, kernel_regularizer=regularizers.l2(0.001)),
+        keras.layers.Dropout(0.1),
+        keras.layers.Dense(352, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.3),
+        keras.layers.Dropout(0.1),
         keras.layers.Dense(
             3, activation="softmax", kernel_regularizer=regularizers.l2(0.001)
         ),
@@ -145,23 +145,23 @@ model = keras.Sequential(
 
 # trained_model = keras.models.load_model(checkpoint_filepath)
 # plot_model(trained_model, to_file='model_architecture.png', show_shapes=True, show_layer_names=True)
-# model.compile(
-#     optimizer=keras.optimizers.Adam(1e-5),
-#     loss="categorical_crossentropy",
-#     metrics=["accuracy"],
-# )
+model.compile(
+    optimizer=keras.optimizers.Adam(3e-4),
+    loss="categorical_crossentropy",
+    metrics=["accuracy"],
+)
 
 # # model.summary()
-# history = model.fit(
-#     train_ds,
-#     epochs=60,
-#     validation_data=val_ds,
-#     class_weight=class_weights,
-#     callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
-# )
+history = model.fit(
+    train_ds,
+    epochs=20,
+    validation_data=val_ds,
+    class_weight=class_weights,
+    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
+)
 
-# test_loss, test_acc = model.evaluate(test_ds)
-# print(f"Test Accuracy: {test_acc * 100:.2f}%")
+test_loss, test_acc = model.evaluate(test_ds)
+print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
 
 # Test model with dir of images and check confusion matrix

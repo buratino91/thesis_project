@@ -16,3 +16,4 @@ test_images/
 *.png
 log_file.txt
 logs/
+tuner_results/
