@@ -11,8 +11,10 @@ from sklearn.utils.class_weight import compute_class_weight
 import matplotlib.pyplot as plt
 import datetime
 from keras.utils import plot_model
+import time
+import cv2
 
-log_dir = "logs/Bayesian/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 base_dir = os.getcwd()
 train_dir = os.path.join(base_dir, "Database/basic/Image/aligned/train_3_classes")
@@ -131,56 +133,79 @@ model = keras.Sequential(
         data_augmentation,
         base_model,
         keras.layers.Flatten(),
-        keras.layers.Dense(352, kernel_regularizer=regularizers.l2(0.001)),
+        keras.layers.Dense(320, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.1),
-        keras.layers.Dense(352, kernel_regularizer=regularizers.l2(0.001)),
+        keras.layers.Dropout(0.4),
+        keras.layers.Dense(320, kernel_regularizer=regularizers.l2(0.001)),
         keras.layers.BatchNormalization(),
-        keras.layers.Dropout(0.1),
+        keras.layers.Dropout(0.4),
         keras.layers.Dense(
             3, activation="softmax", kernel_regularizer=regularizers.l2(0.001)
         ),
     ]
 )
 
-# trained_model = keras.models.load_model(checkpoint_filepath)
-# plot_model(trained_model, to_file='model_architecture.png', show_shapes=True, show_layer_names=True)
+trained_model = keras.models.load_model(checkpoint_filepath)
+plot_model(
+    trained_model,
+    to_file="model_architecture.png",
+    show_shapes=True,
+    show_layer_names=True,
+)
 model.compile(
-    optimizer=keras.optimizers.Adam(3e-4),
+    optimizer=keras.optimizers.Adam(1.25e-4),
     loss="categorical_crossentropy",
     metrics=["accuracy"],
 )
 
-# # model.summary()
+trained_model.summary()
 history = model.fit(
     train_ds,
     epochs=20,
     validation_data=val_ds,
     class_weight=class_weights,
-    callbacks=[early_stopping, reduce_lr, model_checkpoint_callback, tensorboard_callback],
+    callbacks=[
+        early_stopping,
+        reduce_lr,
+        model_checkpoint_callback,
+        tensorboard_callback,
+    ],
 )
 
 test_loss, test_acc = model.evaluate(test_ds)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
+# Check inference time
+start_time = time.time()
+img = keras.preprocessing.image.load_img(
+    "Database/basic/Image/aligned/test_3_classes/Neutral/test_2431_aligned_7.jpg",
+    target_size=(124, 124),
+)
+img = np.expand_dims(img, axis=0)
+
+prediction = trained_model.predict(img)
+end_time = time.time()
+inference_time = end_time - start_time
+print(f"Time taken = {inference_time:.4f}")
+
 
 # Test model with dir of images and check confusion matrix
-# predictions = trained_model.predict(test_ds)
-# y_pred = np.argmax(predictions, axis=1)
-# true_labels = np.concatenate([y for x, y in test_ds], axis=0)
-# y_true = np.argmax(true_labels, axis=1)
+predictions = trained_model.predict(test_ds)
+y_pred = np.argmax(predictions, axis=1)
+true_labels = np.concatenate([y for x, y in test_ds], axis=0)
+y_true = np.argmax(true_labels, axis=1)
 
-# cm = confusion_matrix(y_true, y_pred)
-# plt.figure(figsize=(8, 6))
-# sns.heatmap(
-#     cm,
-#     annot=True,
-#     cmap="Blues",
-#     fmt="d",
-#     xticklabels=["Negative", "Neutral", "Positive"],
-#     yticklabels=["Negative", "Neutral", "Positive"],
-# )
-# plt.xlabel("Predicted Label")
-# plt.ylabel("True Label")
-# plt.title("Confusion Matrix")
-# plt.show()
+cm = confusion_matrix(y_true, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    cm,
+    annot=True,
+    cmap="Blues",
+    fmt="d",
+    xticklabels=["Negative", "Neutral", "Positive"],
+    yticklabels=["Negative", "Neutral", "Positive"],
+)
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("Confusion Matrix")
+plt.show()
