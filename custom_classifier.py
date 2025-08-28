@@ -196,7 +196,7 @@ true_labels = np.concatenate([y for x, y in test_ds], axis=0)
 y_true = np.argmax(true_labels, axis=1)
 
 cm = confusion_matrix(y_true, y_pred)
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(12, 10))
 sns.heatmap(
     cm,
     annot=True,

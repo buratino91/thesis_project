@@ -55,7 +55,7 @@ def plot_confusion_matrix(predictions, true_labels):
     
     cm = confusion_matrix(true_labels, predictions)
     
-    plt.figure(figsize=(6, 5))
+    plt.figure(figsize=(12, 10))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
                 xticklabels=['Different Person', 'Same Person'],
                 yticklabels=['Different Person', 'Same Person'])
